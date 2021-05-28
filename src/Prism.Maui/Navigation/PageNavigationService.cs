@@ -7,6 +7,7 @@ using Microsoft.Maui.Controls;
 using Prism.Behaviors;
 using Prism.Common;
 using Prism.Ioc;
+using Prism.Mvvm;
 
 namespace Prism.Navigation
 {
@@ -467,7 +468,7 @@ namespace Prism.Navigation
 
         protected virtual async Task ProcessNavigationForContentPage(Page currentPage, string nextSegment, Queue<string> segments, INavigationParameters parameters, bool? useModalNavigation, bool animated)
         {
-            var nextPageType = NavigationRegistry.GetPageType(UriParsingHelper.GetSegmentName(nextSegment));
+            var nextPageType = ViewModelLocationProvider2.GetPageType(UriParsingHelper.GetSegmentName(nextSegment));
             bool useReverse = UseReverseNavigation(currentPage, nextPageType) && !(useModalNavigation.HasValue && useModalNavigation.Value);
             if (!useReverse)
             {
@@ -511,7 +512,7 @@ namespace Prism.Navigation
             }
 
             var topPage = currentPage.Navigation.NavigationStack.LastOrDefault();
-            var nextPageType = NavigationRegistry.GetPageType(UriParsingHelper.GetSegmentName(nextSegment));
+            var nextPageType = ViewModelLocationProvider2.GetPageType(UriParsingHelper.GetSegmentName(nextSegment));
             if (topPage?.GetType() == nextPageType)
             {
                 if (clearNavigationStack)
@@ -594,7 +595,7 @@ namespace Prism.Navigation
                 return;
             }
 
-            var nextSegmentType = NavigationRegistry.GetPageType(UriParsingHelper.GetSegmentName(nextSegment));
+            var nextSegmentType = ViewModelLocationProvider2.GetPageType(UriParsingHelper.GetSegmentName(nextSegment));
 
             //we must recreate the NavigationPage everytime or the transitions on iOS will not work properly, unless we meet the two scenarios below
             bool detailIsNavPage = false;
@@ -613,7 +614,7 @@ namespace Prism.Navigation
                     {
                         //if we weren't forced to reuse the NavPage, then let's check the NavPage.CurrentPage against the next segment type as we don't want to recreate the entire nav stack
                         //just in case the user is trying to navigate to the same page which may be nested in a NavPage
-                        var nextPageType = NavigationRegistry.GetPageType(UriParsingHelper.GetSegmentName(segments.Peek()));
+                        var nextPageType = ViewModelLocationProvider2.GetPageType(UriParsingHelper.GetSegmentName(segments.Peek()));
                         var currentPageType = navPage.CurrentPage.GetType();
                         if (nextPageType == currentPageType)
                         {
@@ -776,10 +777,15 @@ namespace Prism.Navigation
             try
             {
                 _container.CreateScope();
-                var page = (Page)NavigationRegistry.CreateView(_container, segmentName);
+                //var page = (Page)NavigationRegistry.CreateView(_container, segmentName);
+                var viewType = ViewModelLocationProvider2.GetPageType(segmentName);
 
-                if (page is null)
-                    throw new NullReferenceException($"The resolved type for {segmentName} was null. You may be attempting to navigate to a Non-Page type");
+                if (viewType is null)
+                    throw new NullReferenceException($"No View Type was found for the segment '{segmentName}'. Please be sure that the View has been properly registered.");
+                else if (!viewType.IsSubclassOf(typeof(Page)))
+                    throw new InvalidCastException($"The resolved type for {segmentName} was '{viewType.FullName}'. This is not a valid Page type and cannot be navigated to.");
+
+                var page = (Page)_container.Resolve(viewType);
 
                 return SetNavigationServiceForPage(page);
             }
@@ -915,7 +921,7 @@ namespace Prism.Navigation
             var selectedTab = parameters?.GetValue<string>(KnownNavigationParameters.SelectedTab);
             if (!string.IsNullOrWhiteSpace(selectedTab))
             {
-                var selectedTabType = NavigationRegistry.GetPageType(UriParsingHelper.GetSegmentName(selectedTab));
+                var selectedTabType = ViewModelLocationProvider2.GetPageType(UriParsingHelper.GetSegmentName(selectedTab));
 
                 var childFound = false;
                 foreach (var child in tabbedPage.Children)
@@ -943,7 +949,7 @@ namespace Prism.Navigation
             var selectedTab = parameters?.GetValue<string>(KnownNavigationParameters.SelectedTab);
             if (!string.IsNullOrWhiteSpace(selectedTab))
             {
-                var selectedTabType = NavigationRegistry.GetPageType(UriParsingHelper.GetSegmentName(selectedTab));
+                var selectedTabType = ViewModelLocationProvider2.GetPageType(UriParsingHelper.GetSegmentName(selectedTab));
 
                 foreach (var child in carouselPage.Children)
                 {
@@ -988,7 +994,7 @@ namespace Prism.Navigation
                 }
                 else
                 {
-                    var pageType = NavigationRegistry.GetPageType(UriParsingHelper.GetSegmentName(item));
+                    var pageType = ViewModelLocationProvider2.GetPageType(UriParsingHelper.GetSegmentName(item));
                     if (PageUtilities.IsSameOrSubclassOf<FlyoutPage>(pageType))
                     {
                         illegalSegments.Enqueue(item);

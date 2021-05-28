@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Prism.Navigation
+namespace Prism.Mvvm
 {
     public record ViewRegistration
     {

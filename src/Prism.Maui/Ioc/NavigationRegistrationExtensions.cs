@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using Prism.Mvvm;
 using Prism.Navigation;
 
 namespace Prism.Ioc
@@ -26,7 +27,7 @@ namespace Prism.Ioc
             if (string.IsNullOrEmpty(name))
                 name = view.Name;
 
-            NavigationRegistry.Register(view, viewModel, name);
+            ViewModelLocationProvider2.Register(view, viewModel, name);
             container.Register(view);
 
             if (viewModel != null)

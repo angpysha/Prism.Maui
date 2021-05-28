@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using Prism.Common;
+using Prism.Mvvm;
 
 namespace Prism.Navigation
 {
@@ -263,12 +264,12 @@ namespace Prism.Navigation
 
         private static Page ProcessCurrentPageNavigationPath(Page page, Stack<string> stack)
         {
-            var currentPageKeyInfo = NavigationRegistry.GetPageNavigationInfo(page.GetType());
+            var currentPageKeyInfo = ViewModelLocationProvider2.GetPageNavigationInfo(page.GetType());
             string currentSegment = $"{currentPageKeyInfo.Name}";
 
             if (page.Parent is Page parent)
             {
-                var parentKeyInfo = NavigationRegistry.GetPageNavigationInfo(parent.GetType());
+                var parentKeyInfo = ViewModelLocationProvider2.GetPageNavigationInfo(parent.GetType());
 
                 if (parent is TabbedPage || parent is CarouselPage)
                 {
@@ -293,7 +294,7 @@ namespace Prism.Navigation
             if (page == null)
                 return;
 
-            var keyInfo = NavigationRegistry.GetPageNavigationInfo(page.GetType());
+            var keyInfo = ViewModelLocationProvider2.GetPageNavigationInfo(page.GetType());
             if (keyInfo != null)
                 stack.Push(keyInfo.Name);
         }

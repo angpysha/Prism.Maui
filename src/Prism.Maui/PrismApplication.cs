@@ -48,7 +48,7 @@ namespace Prism
         /// </summary>
         protected virtual void ConfigureViewModelLocator()
         {
-            ViewModelLocationProvider.SetDefaultViewModelFactory((view, type) =>
+            ViewModelLocationProvider2.SetDefaultViewModelFactory((view, type) =>
             {
                 var overrides = new List<(Type Type, object Instance)>();
                 if (Container.IsRegistered<IResolverOverridesHelper>())
