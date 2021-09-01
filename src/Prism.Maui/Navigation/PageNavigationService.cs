@@ -26,7 +26,7 @@ namespace Prism.Navigation
         private readonly IContainerProvider _container;
         protected readonly IApplication _application;
         protected readonly IPageBehaviorFactory _pageBehaviorFactory;
-        protected IWindow Window => _application.Windows[0];
+        protected Window Window => _application.Windows[0] as Window;
 
         protected Page _page;
         Page IPageAware.Page
@@ -94,7 +94,7 @@ namespace Prism.Navigation
                 NavigationSource = PageNavigationSource.NavigationService;
 
                 page = GetCurrentPage();
-                if (IsRoot(Window.Content as Page, page))
+                if (IsRoot(Window.Page, page))
                     throw new NavigationException(NavigationException.CannotPopApplicationMainPage, page);
 
                 var segmentParameters = UriParsingHelper.GetSegmentParameters(null, parameters);
@@ -110,7 +110,7 @@ namespace Prism.Navigation
                 }
 
                 bool useModalForDoPop = UseModalGoBack(page, useModalNavigation);
-                Page previousPage = PageUtilities.GetOnNavigatedToTarget(page, Window?.Content, useModalForDoPop);
+                Page previousPage = PageUtilities.GetOnNavigatedToTarget(page, Window.Page, useModalForDoPop);
 
                 var poppedPage = await DoPop(page.Navigation, useModalForDoPop, animated);
                 if (poppedPage != null)
@@ -133,7 +133,7 @@ namespace Prism.Navigation
 
             return new NavigationResult
             {
-                Exception = GetGoBackException(page, Window.Content)
+                Exception = GetGoBackException(page, Window.Page)
             };
         }
 
@@ -453,7 +453,7 @@ namespace Prism.Navigation
 
             await ProcessNavigation(nextPage, segments, parameters, useModalNavigation, animated);
 
-            var currentPage = Window.Content as Page;
+            var currentPage = GetCurrentPage();
             var modalStack = currentPage?.Navigation.ModalStack.ToList();
             await DoNavigateAction(GetCurrentPage(), nextSegment, nextPage, parameters, async () =>
             {
@@ -1034,7 +1034,7 @@ namespace Prism.Navigation
             if (currentPage == null)
             {
                 if (Window is PrismApplicationWindow paw)
-                    paw.Content = page;
+                    paw.Page = page; 
                 else
                     throw new Exception("Window not of type PrismApplicationWindow");
 
@@ -1081,7 +1081,17 @@ namespace Prism.Navigation
 
         protected virtual Page GetCurrentPage()
         {
-            return _page != null ? _page : Window.Content as Page;
+            try
+            {
+
+                return _page ?? Window.Page;
+
+            }
+            catch (InvalidOperationException e)
+            {
+                return null;
+            }
+            //  return null;
         }
 
         internal static bool UseModalNavigation(Page currentPage, bool? useModalNavigationDefault)
@@ -1114,11 +1124,11 @@ namespace Prism.Navigation
         {
             if (navPage.CurrentPage != navPage.RootPage)
                 return false;
-            else if (navPage.CurrentPage == navPage.RootPage && navPage.Parent is Application && Window.Content != navPage)
+            else if (navPage.CurrentPage == navPage.RootPage && navPage.Parent is Application && Window.Page != navPage)
                 return true;
-            else if (navPage.Parent is TabbedPage tabbed && tabbed != Window.Content)
+            else if (navPage.Parent is TabbedPage tabbed && tabbed != Window.Page)
                 return true;
-            else if (navPage.Parent is CarouselPage carousel && carousel != Window.Content)
+            else if (navPage.Parent is CarouselPage carousel && carousel != Window.Page)
                 return true;
 
             return false;

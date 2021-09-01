@@ -168,7 +168,11 @@ namespace Prism
             return window;
         }
 
-        protected override IWindow CreateWindow(IActivationState activationState)
+        //protected override IWindow CreateWindow(IActivationState activationState)
+        //{
+        //    return new PrismApplicationWindow();
+        //}
+        protected override Window CreateWindow(IActivationState activationState)
         {
             return new PrismApplicationWindow();
         }

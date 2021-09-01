@@ -3,9 +3,9 @@ using Microsoft.Maui.Controls;
 
 namespace Prism
 {
-    public class PrismApplicationWindow : VisualElement, IWindow
+    public class PrismApplicationWindow :  Window
     {
-        public IView Content { get; set; }
-        public string Title { get; set; }
+        public new IView Content { get; set; }
+        public new  string Title { get; set; }
     }
 }
